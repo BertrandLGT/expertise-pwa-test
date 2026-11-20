@@ -1,4 +1,4 @@
-const CACHE='expertise-pwa-test-v1';
-self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','./index.html','./manifest.json','./icon.png'])).then(()=>self.skipWaiting()));});
+const CACHE='expertise-pwa-test-v2';
+self.addEventListener('install',e=>e.waitUntil((async()=>{const c=await caches.open(CACHE);await c.addAll(['./index.html','./manifest.json','./icon.png'].map(u=>new Request(u,{cache:'reload'})));await self.skipWaiting()})()));
 self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
-self.addEventListener('fetch',e=>{if(e.request.method!=='GET'||new URL(e.request.url).origin!==self.location.origin)return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(err=>{if(e.request.mode==='navigate')return caches.match('./index.html');throw err;})));});
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET'||new URL(e.request.url).origin!==self.location.origin||!e.request.url.startsWith(self.registration.scope))return;e.respondWith((async()=>{const c=await caches.open(CACHE);if(e.request.mode==='navigate'){try{const r=await fetch(e.request);if(r.ok)return r;}catch(_){}return await c.match('./index.html')||Response.error()}return await c.match(e.request)||fetch(e.request)})())});
